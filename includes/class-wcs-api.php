@@ -18,6 +18,7 @@ class WCS_API {
 		add_filter( 'woocommerce_api_classes', array( __CLASS__, 'includes' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ), 15 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_route_overrides' ), 15 );
+		add_action( 'woocommerce_rest_set_order_item', [ __CLASS__, 'add_sign_up_fee_to_order_item' ], 15, 2 );
 	}
 
 	/**
@@ -75,6 +76,51 @@ class WCS_API {
 		}
 
 		WC_REST_Subscription_System_Status_Manager::init();
+		new WC_REST_Subscriptions_Settings();
+	}
+
+	/**
+	 * Adds sign-up fees to order items added/edited via the REST API.
+	 *
+	 * @since 6.3.0
+	 *
+	 * @param WC_Order_Item $item              Order item object.
+	 * @param array         $item_request_data Data posted to the API about the order item.
+	 */
+	public static function add_sign_up_fee_to_order_item( $item, $item_request_data = array() ) {
+		if ( 'line_item' !== $item->get_type() || ! self::is_orders_api_request() ) {
+			return;
+		}
+
+		// If the request includes an item subtotal or total, we don't want to override the provided total.
+		if ( isset( $item_request_data['subtotal'] ) || isset( $item_request_data['total'] ) ) {
+			return;
+		}
+
+		$product = $item->get_product();
+
+		if ( ! WC_Subscriptions_Product::is_subscription( $product ) ) {
+			return;
+		}
+
+		$sign_up_fee = WC_Subscriptions_Product::get_sign_up_fee( $product );
+		$sign_up_fee = is_numeric( $sign_up_fee ) ? (float) $sign_up_fee : 0;
+
+		if ( 0 < $sign_up_fee ) {
+			// Recalculate the totals as in `prepare_line_items`, but including the sign up fee in the price.
+			$trial_length = WC_Subscriptions_Product::get_trial_length( $product );
+
+			if ( $trial_length > 0 ) {
+				$price = $sign_up_fee;
+			} else {
+				$price = (float) $product->get_price() + $sign_up_fee;
+			}
+
+			$total = wc_get_price_excluding_tax( $product, [ 'qty' => $item->get_quantity(), 'price' => $price ] );
+
+			$item->set_total( $total );
+			$item->set_subtotal( $total );
+		}
 	}
 
 	/**
@@ -86,5 +132,20 @@ class WCS_API {
 	protected static function is_wp_compatible() {
 		global $wp_version;
 		return version_compare( $wp_version, '4.4', '>=' );
+	}
+
+	/**
+	 * Determines if the current request is a REST API request for orders.
+	 *
+	 * @since 6.3.0
+	 *
+	 * @return boolean
+	 */
+	protected static function is_orders_api_request() {
+		if ( ! defined( 'REST_REQUEST' ) || ! REST_REQUEST || empty( $GLOBALS['wp']->query_vars['rest_route'] ) ) {
+			return false;
+		}
+
+		return (bool) preg_match( '/\/wc\/v[1-3]\/orders\b/', $GLOBALS['wp']->query_vars['rest_route'] );
 	}
 }

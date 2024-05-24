@@ -3,7 +3,7 @@
  * Scheduler for subscription events that uses the Action Scheduler
  *
  * @class     WCS_Action_Scheduler
- * @version   2.0.0
+ * @version   1.0.0 - Migrated from WooCommerce Subscriptions v2.0.0
  * @package   WooCommerce Subscriptions/Classes
  * @category  Class
  * @author    Prospress
@@ -15,7 +15,7 @@ class WCS_Action_Scheduler extends WCS_Scheduler {
 	 *
 	 * This variable has been deprecated and will be removed completely in the future. You should use WCS_Action_Scheduler::get_scheduled_action_hook() and WCS_Action_Scheduler::get_date_types_to_schedule() instead.
 	 *
-	 * @deprecated 2.6.0
+	 * @deprecated 1.0.0 - Migrated from WooCommerce Subscriptions v2.6.0
 	 * @var array An array of $action_hook => $date_type values
 	 */
 	protected $action_hooks = array(
@@ -30,7 +30,7 @@ class WCS_Action_Scheduler extends WCS_Scheduler {
 	 *
 	 * @param object $subscription An instance of a WC_Subscription object
 	 * @param string $date_type Can be 'trial_end', 'next_payment', 'payment_retry', 'end', 'end_of_prepaid_term' or a custom date type
-	 * @param string $datetime A MySQL formated date/time string in the GMT/UTC timezone.
+	 * @param string $datetime A MySQL formatted date/time string in the GMT/UTC timezone.
 	 */
 	public function update_date( $subscription, $date_type, $datetime ) {
 
@@ -77,7 +77,7 @@ class WCS_Action_Scheduler extends WCS_Scheduler {
 	 *
 	 * @param object $subscription An instance of a WC_Subscription object
 	 * @param string $date_type Can be 'trial_end', 'next_payment', 'end', 'end_of_prepaid_term' or a custom date type
-	 * @param string $datetime A MySQL formated date/time string in the GMT/UTC timezone.
+	 * @param string $datetime A MySQL formatted date/time string in the GMT/UTC timezone.
 	 */
 	public function update_status( $subscription, $new_status, $old_status ) {
 

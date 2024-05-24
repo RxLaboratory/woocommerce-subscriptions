@@ -5,13 +5,13 @@
  * When triggering a filter which has a deprecated equivalient from Subscriptions v1.n, check if the old
  * filter had any callbacks attached to it, and if so, log a notice and trigger the old filter with a set
  * of parameters in the deprecated format so that the current return value also has the old filters applied
- * (whereever possible that is).
+ * (wherever possible that is).
  *
  * @package    WooCommerce Subscriptions
  * @subpackage WCS_Hook_Deprecator
  * @category   Class
  * @author     Prospress
- * @since      2.0
+ * @since      1.0.0 - Migrated from WooCommerce Subscriptions v2.0
  */
 
 class WCS_Filter_Deprecator extends WCS_Hook_Deprecator {
@@ -69,7 +69,7 @@ class WCS_Filter_Deprecator extends WCS_Hook_Deprecator {
 	/**
 	 * Bootstraps the class and hooks required actions & filters.
 	 *
-	 * @since 2.0
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.0
 	 */
 	public function __construct() {
 		parent::__construct();
@@ -78,7 +78,7 @@ class WCS_Filter_Deprecator extends WCS_Hook_Deprecator {
 	/**
 	 * Trigger the old filter with the original callback parameters and make sure the return value is passed on (when possible).
 	 *
-	 * @since 2.0
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.0
 	 */
 	protected function trigger_hook( $old_hook, $new_callback_args ) {
 

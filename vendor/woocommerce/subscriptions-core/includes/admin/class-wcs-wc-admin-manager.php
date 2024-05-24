@@ -3,7 +3,7 @@
  * WooCommerce Subscriptions WC Admin Manager.
  *
  * @package  WooCommerce Subscriptions/Admin
- * @version  3.0.2
+ * @version  1.0.0 - Migrated from WooCommerce Subscriptions v3.0.2
  */
 
 use Automattic\WooCommerce\Admin\Loader;
@@ -40,6 +40,16 @@ class WCS_WC_Admin_Manager {
 			)
 		);
 
+		// WooCommerce > Subscriptions (HPOS)
+		wc_admin_connect_page(
+			array(
+				'id'        => 'woocommerce-custom-orders-subscriptions',
+				'screen_id' => wcs_get_page_screen_id( 'shop_subscription' ),
+				'title'     => __( 'Subscriptions', 'woocommerce-subscriptions' ),
+				'path'      => 'admin.php?page=wc-orders--shop_subscription',
+			)
+		);
+
 		// WooCommerce > Subscriptions > Add New.
 		wc_admin_connect_page(
 			array(
@@ -64,7 +74,7 @@ class WCS_WC_Admin_Manager {
 	/**
 	 * Register the navigation items in the WooCommerce navigation.
 	 *
-	 * @since 3.0.12
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v3.0.12
 	 */
 	public static function register_navigation_items() {
 		if (

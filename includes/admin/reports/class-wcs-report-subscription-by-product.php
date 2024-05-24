@@ -88,11 +88,11 @@ class WCS_Report_Subscription_By_Product extends WP_List_Table {
 		$columns = array(
 			'product_name'            => __( 'Subscription Product', 'woocommerce-subscriptions' ),
 			// translators: %s: help tip.
-			'subscription_count'      => sprintf( __( 'Subscription Count %s', 'woocommerce-subscriptions' ), wcs_help_tip( __( 'The number of subscriptions that include this product as a line item and have a status other than pending or trashed.', 'woocommerce-subscriptions' ) ) ),
+			'subscription_count'      => sprintf( __( 'Subscription Count %s', 'woocommerce-subscriptions' ), wc_help_tip( __( 'The number of subscriptions that include this product as a line item and have a status other than pending or trashed.', 'woocommerce-subscriptions' ) ) ),
 			// translators: %s: help tip.
-			'average_recurring_total' => sprintf( __( 'Average Recurring Line Total %s', 'woocommerce-subscriptions' ), wcs_help_tip( __( 'The average line total for this product on each subscription.', 'woocommerce-subscriptions' ) ) ),
+			'average_recurring_total' => sprintf( __( 'Average Recurring Line Total %s', 'woocommerce-subscriptions' ), wc_help_tip( __( 'The average line total for this product on each subscription.', 'woocommerce-subscriptions' ) ) ),
 			// translators: %s: help tip.
-			'average_lifetime_value'  => sprintf( __( 'Average Lifetime Value %s', 'woocommerce-subscriptions' ), wcs_help_tip( __( 'The average line total on all orders for this product line item.', 'woocommerce-subscriptions' ) ) ),
+			'average_lifetime_value'  => sprintf( __( 'Average Lifetime Value %s', 'woocommerce-subscriptions' ), wc_help_tip( __( 'The average line total on all orders for this product line item.', 'woocommerce-subscriptions' ) ) ),
 		);
 
 		return $columns;
@@ -161,7 +161,12 @@ class WCS_Report_Subscription_By_Product extends WP_List_Table {
 		$cached_results = get_transient( strtolower( __CLASS__ ) );
 		$query_hash     = md5( $query );
 
-		if ( $args['no_cache'] || false === $cached_results || ! isset( $cached_results[ $query_hash ] ) ) {
+		// Set a default value for cached results for PHP 8.2+ compatibility.
+		if ( empty( $cached_results ) ) {
+			$cached_results = [];
+		}
+
+		if ( $args['no_cache'] || ! isset( $cached_results[ $query_hash ] ) ) {
 			$wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' );
 			$cached_results[ $query_hash ] = apply_filters( 'wcs_reports_product_data', $wpdb->get_results( $query, OBJECT_K ), $args );
 			set_transient( strtolower( __CLASS__ ), $cached_results, WEEK_IN_SECONDS );
@@ -214,7 +219,7 @@ class WCS_Report_Subscription_By_Product extends WP_List_Table {
 
 		$query_hash = md5( $query );
 
-		if ( $args['no_cache'] || false === $cached_results || ! isset( $cached_results[ $query_hash ] ) ) {
+		if ( $args['no_cache'] || ! isset( $cached_results[ $query_hash ] ) ) {
 			$wpdb->query( 'SET SESSION SQL_BIG_SELECTS=1' );
 			$cached_results[ $query_hash ] = apply_filters( 'wcs_reports_product_lifetime_value_data', $wpdb->get_results( $query, OBJECT_K ), $args );
 			set_transient( strtolower( __CLASS__ ), $cached_results, WEEK_IN_SECONDS );

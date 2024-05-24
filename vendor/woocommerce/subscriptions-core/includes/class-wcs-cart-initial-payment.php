@@ -6,7 +6,7 @@
  * @subpackage WCS_Cart_Initial_Payment
  * @category Class
  * @author Prospress
- * @since 2.0
+ * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.0
  */
 
 class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
@@ -17,7 +17,7 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 	/**
 	 * Bootstraps the class and hooks required actions & filters.
 	 *
-	 * @since 2.0
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.0
 	 */
 	public function __construct() {
 		$this->setup_hooks();
@@ -27,14 +27,14 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 		// Apply initial discounts when there is a pending initial order
 		add_action( 'woocommerce_setup_cart_for_subscription_initial_payment', array( $this, 'setup_discounts' ) );
 
-		// Initialise the stock mananger.
+		// Initialise the stock manager.
 		WCS_Initial_Cart_Stock_Manager::attach_callbacks();
 	}
 
 	/**
 	 * Setup the cart for paying for a delayed initial payment for a subscription.
 	 *
-	 * @since 2.0
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.0
 	 */
 	public function maybe_setup_cart() {
 		global $wp;
@@ -49,6 +49,26 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 		$order     = wc_get_order( $order_id );
 
 		if ( wcs_get_objects_property( $order, 'order_key' ) !== $order_key || ! $order->has_status( array( 'pending', 'failed' ) ) || ! wcs_order_contains_subscription( $order, 'parent' ) || wcs_order_contains_subscription( $order, 'resubscribe' ) ) {
+			return;
+		}
+
+		/**
+		 * Filter whether to set up the cart during the pay-for-order payment flow.
+		 *
+		 * Allows developers to bypass cart setup for the pay-for-order payment flow.
+		 * This is intended for situations in which re-creating the cart will result in
+		 * the loss of order data.
+		 *
+		 * @since 6.2.0
+		 *
+		 * @param bool     $recreate_cart Whether to recreate the initial payment order. Default true.
+		 * @param WC_Order $order         The order object.
+		 * @param string   $order_key     The order key.
+		 * @param int      $order_id      The order ID.
+		 */
+		$recreate_cart = apply_filters( "wcs_setup_cart_for_{$this->cart_item_key}", true, $order, $order_key, $order_id );
+
+		if ( ! $recreate_cart ) {
 			return;
 		}
 
@@ -94,7 +114,7 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 	 * Checks the cart to see if it contains an initial payment item.
 	 *
 	 * @return bool | Array The cart item containing the initial payment, else false.
-	 * @since  2.0.13
+	 * @since  1.0.0 - Migrated from WooCommerce Subscriptions v2.0.13
 	 */
 	protected function cart_contains() {
 
@@ -117,7 +137,7 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 	 *
 	 * @param Array The initial payment cart item.
 	 * @return WC_Order | The order object
-	 * @since  2.0.13
+	 * @since  1.0.0 - Migrated from WooCommerce Subscriptions v2.0.13
 	 */
 	protected function get_order( $cart_item = '' ) {
 		$order = false;
@@ -134,9 +154,9 @@ class WCS_Cart_Initial_Payment extends WCS_Cart_Renewal {
 	}
 
 	/**
-	 * Deteremines if the cart should honor the granfathered subscription/order line item total.
+	 * Determines if the cart should honor the grandfathered subscription/order line item total.
 	 *
-	 * @since 3.0.10
+	 * @since 1.0.0 - Migrated from WooCommerce Subscriptions v3.0.10
 	 *
 	 * @param array $cart_item The cart item to check.
 	 * @return bool Whether the cart should honor the order's prices.

@@ -4,8 +4,8 @@
  *
  * @author  Prospress
  * @package WooCommerce_Subscription/Templates
- * @since 2.2.19
- * @version 2.6.5
+ * @since 1.0.0 - Migrated from WooCommerce Subscriptions v2.2.19
+ * @version 1.0.0 - Migrated from WooCommerce Subscriptions v2.6.5
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -81,7 +81,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<td><?php esc_html_e( 'Actions', 'woocommerce-subscriptions' ); ?></td>
 				<td>
 					<?php foreach ( $actions as $key => $action ) : ?>
-						<a href="<?php echo esc_url( $action['url'] ); ?>" class="button <?php echo sanitize_html_class( $key ) ?>"><?php echo esc_html( $action['name'] ); ?></a>
+						<?php $classes = [ 'button', sanitize_html_class( $key ) ]; ?>
+						<?php $classes[] = isset( $action['block_ui'] ) && $action['block_ui'] ? 'wcs_block_ui_on_click' : '' ?>
+						<a
+							href="<?php echo esc_url( $action['url'] ); ?>"
+							class="<?php echo trim( implode( ' ', $classes ) ); ?>"
+						>
+							<?php echo esc_html( $action['name'] ); ?>
+						</a>
 					<?php endforeach; ?>
 				</td>
 			</tr>

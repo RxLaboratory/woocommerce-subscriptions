@@ -5,10 +5,11 @@
  * Description: Sell products and services with recurring payments in your WooCommerce Store.
  * Author: WooCommerce
  * Author URI: https://woocommerce.com/
- * Version: 4.6.0
+ * Version: 6.3.2
+ * Requires Plugins: woocommerce
  *
- * WC requires at least: 4.4
- * WC tested up to: 6.5.0
+ * WC requires at least: 7.9.0
+ * WC tested up to: 8.9.0
  * Woo: 27147:6115e6d7e297b623a169fdcf5728b224
  *
  * Copyright 2019 WooCommerce
@@ -31,33 +32,25 @@
  * @since   1.0
  */
 
-/**
- * Required functions
- */
-if ( ! function_exists( 'woothemes_queue_update' ) || ! function_exists( 'is_woocommerce_active' ) ) {
-	require_once dirname( __FILE__ ) . '/woo-includes/woo-functions.php';
-}
+require_once( __DIR__ . '/includes/class-wc-subscriptions-dependency-manager.php' );
+$dependency_manager = new WC_Subscriptions_Dependency_Manager( WC_Subscriptions::$wc_minimum_supported_version );
 
-/**
- * Check if WooCommerce is active and at the required minimum version, and if it isn't, disable Subscriptions.
- *
- * @since 1.0
- */
-if ( ! is_woocommerce_active() || version_compare( get_option( 'woocommerce_db_version' ), WC_Subscriptions::$wc_minimum_supported_version, '<' ) ) {
-	add_action( 'admin_notices', 'WC_Subscriptions::woocommerce_inactive_notice' );
+// Check the dependencies before loading the plugin. If the dependencies are not met, display an admin notice and exit
+if ( ! $dependency_manager->has_valid_dependencies() ) {
+	add_action( 'admin_notices', [ $dependency_manager, 'display_dependency_admin_notice' ] );
 	return;
 }
 
 /**
- * Declare plugin incompatibility with WooCommerce HPOS.
+ * Declare plugin compatibility with WooCommerce HPOS.
  *
- * @since 4.6.0
+ * @since 4.9.0
  */
 add_action(
 	'before_woocommerce_init',
 	function() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, false );
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
 		}
 	}
 );
@@ -85,10 +78,10 @@ class WC_Subscriptions {
 	public static $plugin_file = __FILE__;
 
 	/** @var string */
-	public static $version = '4.6.0';
+	public static $version = '6.3.2'; // WRCS: DEFINED_VERSION.
 
 	/** @var string */
-	public static $wc_minimum_supported_version = '4.4';
+	public static $wc_minimum_supported_version = '7.7';
 
 	/** @var WCS_Cache_Manager */
 	public static $cache;
@@ -116,37 +109,14 @@ class WC_Subscriptions {
 	/**
 	 * Called when WooCommerce is inactive or running and out-of-date version to display an inactive notice.
 	 *
+	 * @deprecated 5.0.0
+	 *
 	 * @since 1.2
 	 */
 	public static function woocommerce_inactive_notice() {
-		if ( current_user_can( 'activate_plugins' ) ) {
-			$admin_notice_content = '';
-
-			if ( ! is_woocommerce_active() ) {
-				$install_url = wp_nonce_url(
-					add_query_arg(
-						array(
-							'action' => 'install-plugin',
-							'plugin' => 'woocommerce',
-						),
-						admin_url( 'update.php' )
-					),
-					'install-plugin_woocommerce'
-				);
-
-				// translators: 1$-2$: opening and closing <strong> tags, 3$-4$: link tags, takes to woocommerce plugin on wp.org, 5$-6$: opening and closing link tags, leads to plugins.php in admin
-				$admin_notice_content = sprintf( esc_html__( '%1$sWooCommerce Subscriptions is inactive.%2$s The %3$sWooCommerce plugin%4$s must be active for WooCommerce Subscriptions to work. Please %5$sinstall & activate WooCommerce &raquo;%6$s', 'woocommerce-subscriptions' ), '<strong>', '</strong>', '<a href="http://wordpress.org/extend/plugins/woocommerce/">', '</a>', '<a href="' . esc_url( $install_url ) . '">', '</a>' );
-			} elseif ( version_compare( get_option( 'woocommerce_db_version' ), self::$wc_minimum_supported_version, '<' ) ) {
-				// translators: 1$-2$: opening and closing <strong> tags, 3$: minimum supported WooCommerce version, 4$-5$: opening and closing link tags, leads to plugin admin
-				$admin_notice_content = sprintf( esc_html__( '%1$sWooCommerce Subscriptions is inactive.%2$s This version of Subscriptions requires WooCommerce %3$s or newer. Please %4$supdate WooCommerce to version %3$s or newer &raquo;%5$s', 'woocommerce-subscriptions' ), '<strong>', '</strong>', self::$wc_minimum_supported_version, '<a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">', '</a>' );
-			}
-
-			if ( $admin_notice_content ) {
-				echo '<div class="error">';
-				echo '<p>' . wp_kses_post( $admin_notice_content ) . '</p>';
-				echo '</div>';
-			}
-		}
+		_deprecated_function( __METHOD__, '5.0.0', 'WC_Subscriptions_Dependency_Manager::display_dependency_admin_notice' );
+		$dependency_manager = new WC_Subscriptions_Dependency_Manager( WC_Subscriptions::$wc_minimum_supported_version );
+		$dependency_manager->display_dependency_admin_notice();
 	}
 
 	/* Deprecated Functions */
@@ -176,7 +146,7 @@ class WC_Subscriptions {
 		} else {
 			// Trigger an error consistant with PHP if the function called doesn't exist.
 			$class = __CLASS__;
-			$trace = debug_backtrace();
+			$trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 1 );
 			$file  = $trace[0]['file'];
 			$line  = $trace[0]['line'];
 			trigger_error( "Call to undefined method $class::$method() in $file on line $line", E_USER_ERROR ); //phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped
@@ -212,7 +182,7 @@ register_activation_hook( __FILE__, 'add_woocommerce_inbox_variant' );
  */
 function wcs_init_autoloader() {
 	if ( ! function_exists( 'is_plugin_active' ) ) {
-		include_once ABSPATH . 'wp-admin/includes/plugin.php';
+		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	}
 
 	$wcs_core_plugin_slug = 'woocommerce-subscriptions-core/woocommerce-subscriptions-core.php';
